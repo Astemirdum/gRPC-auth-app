@@ -1,0 +1,18 @@
+auth-service:
+  addr: "localhost:50051"
+
+db:
+  host: "localhost"
+  port: "5432"
+  user: "postgres"
+  dbname: "postgres"
+  
+redis:
+  addr: "localhost:6379"
+  passwd: ""
+
+kafka:
+  addr: "localhost:9092"
+  topic: "auth"
+
+  

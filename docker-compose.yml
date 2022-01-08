@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  auth-app:
+    restart: always
+    build: ./
+    command: ./server/cmd/auth-app
+    depends_on:
+      - db
+      - cache
+    ports:
+      - 50051:50051
+    environment:
+      - DB_PASSWORD="postgres"
+    links:
+      - db
+
+  db:
+    restart: always
+    image: postgres:latest
+    volumes:
+        - ./.database/postgres/data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - 5436:5432
+
+  cache:
+    restart: always
+    image: redis:6.2.6
+    command: ./redis-server
+    ports:
+      - 6379:6379
+
+  zookeeper:
+    image: docker.io/bitnami/zookeeper:3.7
+    ports:
+      - "2181:2181"
+    volumes:
+      - "zookeeper_data:/bitnami"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+  kafka:
+    image: docker.io/bitnami/kafka:3
+    ports:
+      - "9092:9092"
+    volumes:
+      - "kafka_data:/bitnami"
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    depends_on:
+      - zookeeper
+
+volumes:
+  zookeeper_data:
+    driver: local
+  kafka_data:
+    driver: local 
+  

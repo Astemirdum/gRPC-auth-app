@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package authapp;
+
+// protoc auth.proto --go_out=plugins=grpc:.
+
+option go_package = "./;authpb";
+
+
+service AuthService {
+    rpc CreateUser(CreateRequest) returns (CreateResponse);
+    rpc GetAllUser(GetAllRequest) returns (stream GetAllResponse);
+    rpc DeleteUser(DeleteRequest) returns (DeleteResponse);
+    rpc AuthUser(AuthRequest) returns (AuthResponse);
+    rpc ValidateToken(ValidateRequest) returns (ValidateResponse);
+}
+
+message User {
+    int32 id = 1;
+    string email = 2;
+    string password = 3;
+}
+
+message CreateRequest {
+    User user = 1;
+}
+
+message CreateResponse {
+    int32 id = 1;
+}
+
+message GetAllRequest {}
+
+message GetAllResponse {
+    User user = 1;
+}
+
+message DeleteRequest {
+    int32 id = 1;
+}
+
+message DeleteResponse{
+    bool success = 1;
+}
+
+message Token {
+    string token = 1;
+    bool valid = 2;
+}
+
+message AuthRequest {
+    User user = 1;
+}
+
+message AuthResponse {
+    Token token = 1;
+}
+
+message ValidateRequest {
+    Token token = 1;
+}
+
+message ValidateResponse {
+    Token token = 1;    
+}
