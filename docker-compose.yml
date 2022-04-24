@@ -15,7 +15,6 @@ services:
       - db
     networks:
       - user-networks
-
   db:
     restart: always
     image: postgres:latest
@@ -29,7 +28,6 @@ services:
       - 5432:5432
     networks:
       - user-networks
-
   cache:
     restart: always
     image: redis:6.2.6
@@ -39,35 +37,5 @@ services:
     networks:
       - user-networks
 
-  zookeeper:
-    image: docker.io/bitnami/zookeeper:3.7
-    ports:
-      - "2181:2181"
-    volumes:
-      - "zookeeper_data:/bitnami"
-    environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
-    networks:
-      - user-networks
-  kafka:
-    image: docker.io/bitnami/kafka:3
-    ports:
-      - "9092:9092"
-    volumes:
-      - "kafka_data:/bitnami"
-    environment:
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-      - ALLOW_PLAINTEXT_LISTENER=yes
-    depends_on:
-      - zookeeper
-    networks:
-      - user-networks
-
-volumes:
-  zookeeper_data:
-    driver: local
-  kafka_data:
-    driver: local 
-  
 networks:
   user-networks:

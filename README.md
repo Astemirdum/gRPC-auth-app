@@ -1,45 +1,23 @@
 # gRPC Service AuthUsersApp на Go
 
-## В работе применены следующие концепции:
-- Разработка gRPC сервиса на основе proto файла на Go: добавление, удаление, авторизация, аутентификация пользователя, список пользователей.
-- Авторизация и аутентификация используя stateless подход. Работа с JWT. Применение AuthInterceptor при удаление пользователя.
-- Подход Чистой Архитектуры в построении структуры приложения. Dependency injection.
-- Работа с БД Postgres, используя библиотеку <a href="https://github.com/jmoiron/sqlx">sqlx</a>.
-- На запрос получения списка пользователей данные кешируются в <a href="https://redis.io/">Redis</a> на 1 мин.
-- При добавлении пользователя добовляется сообщение в очередь <a href="https://kafka.apache.org/">Kafka</a>.
-- Конфигурация приложения с помощью библиотеки <a href="https://github.com/spf13/viper">spf13/viper</a>.
+## The following concepts are applied in app:
+- Development of a gRPC service based on a proto file in Go:
+  - create
+  - delete
+  - list users
+  - authorize user
+
+- Authorization and authentication using a stateless approach (JWT)
+- The Clean Architecture approach (dependency injection)
+- Postgres database using <a href="https://github.com/jmoiron/sqlx">sqlx</a> library.
+- list users, the data is cached in <a href="https://redis.io/">Redis</a> for 1 min.
+- Application configuration using <a href="https://github.com/spf13/viper">spf13/viper</a> library.
 - Graceful Shutdown.
-- Запуск из Docker.
+- Running app in Docker containers.
 
-### Для запуска сервиса:
+### to start the service:
 
-#### from Docker
+#### run app in docker containers
 ```
 make run
-```
-
-Если приложение запускается впервые, необходимо применить миграции к базе данных:
-```
-make migrate
-```
-
-#### gRPC Server
-```
-go run server/cmd/main.go
-```
-
-#### gRPC Client
-```
-go run client/main.go
-```
-
-#### Redis
-```
-src/redis-server
-```
-
-#### Kafka
-```
-bin/zookeeper-server-start.sh config/zookeeper.properties
-bin/kafka-server-start.sh config/server.properties
 ```
