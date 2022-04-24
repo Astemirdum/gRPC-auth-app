@@ -10,7 +10,7 @@ services:
     ports:
       - 50051:50051
     environment:
-      - DB_PASSWORD=postgres
+      - DB_PASSWORD=userdb
     links:
       - db
     networks:
@@ -24,7 +24,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres
+      - POSTGRES_DB=userdb
     ports:
       - 5432:5432
     networks:

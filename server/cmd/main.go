@@ -10,11 +10,11 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/Astemirdum/user-app/authpb"
 	"github.com/Astemirdum/user-app/server"
 	"github.com/Astemirdum/user-app/server/pkg/handler"
 	"github.com/Astemirdum/user-app/server/pkg/repository"
 	"github.com/Astemirdum/user-app/server/pkg/service"
+	"github.com/Astemirdum/user-app/userpb"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -46,17 +46,15 @@ func main() {
 		logrus.Fatalf("redis init: %v", err)
 	}
 
-	producer := server.NewKafkaProducer(viper.GetString("kafka.topic"), viper.GetString("kafka.addr"))
-
 	repo := repository.NewRepository(db)
 	services := service.NewService(repo)
-	srv := handler.NewHandler(services, cache, producer)
+	srv := handler.NewHandler(services, cache)
 
 	s := grpc.NewServer(
 		grpc.UnaryInterceptor(srv.AuthInterceptor),
 		grpc.StreamInterceptor(logInterceptor))
 	//grpc.Creds(credentials.NewTLS(&tls.Config{}))
-	authpb.RegisterAuthServiceServer(s, srv)
+	userpb.RegisterUserServiceServer(s, srv)
 
 	lis, err := net.Listen("tcp", viper.GetString("auth-service.addr"))
 	if err != nil {
@@ -76,7 +74,6 @@ func main() {
 
 	_ = db.Close()
 	_ = cache.Client.Close()
-	_ = producer.Prod.Close()
 	_ = lis.Close()
 	logrus.Println("END GAME...")
 }

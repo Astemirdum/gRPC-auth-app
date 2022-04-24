@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Astemirdum/user-app/authpb"
 	"github.com/Astemirdum/user-app/client/service"
+	"github.com/Astemirdum/user-app/userpb"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
@@ -73,9 +73,7 @@ func main() {
 
 	defer cc.Close()
 
-	sc := authpb.NewAuthServiceClient(cc)
-
-	cs := service.NewClientService(sc)
+	cs := service.NewClientService(userpb.NewUserServiceClient(cc))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -86,7 +84,7 @@ func main() {
 	)
 	ctx = metadata.NewOutgoingContext(ctx, md)
 
-	user := &authpb.User{
+	user := &userpb.User{
 		Email:    "lol13@kek.ru",
 		Password: "lol13",
 	}
@@ -100,14 +98,13 @@ func main() {
 	// // delete user
 	md = metadata.Pairs("email", "lol10@kek.ru")
 	ctx = metadata.NewOutgoingContext(ctx, md)
-	if _, err := cs.DeleteUser(ctx, 13); err != nil {
+	if err := cs.DeleteUser(ctx, 13); err != nil {
 		logrus.Println(err)
-	} else {
-		fmt.Println("user deleted")
 	}
+	fmt.Println("user deleted")
 
 	// Auth User
-	token, err = cs.AuthUser(ctx, user)
+	token, err = cs.IssueToken(ctx, user)
 	if err != nil {
 		logrus.Println(err)
 	}
@@ -121,7 +118,7 @@ func main() {
 	fmt.Println(users)
 
 	//// Validate Token
-	if _, err := cs.ValidateToken(ctx, token); err != nil {
+	if err := cs.AuthUser(ctx, token); err != nil {
 		logrus.Println(err)
 	}
 	fmt.Println("token valid: ok")

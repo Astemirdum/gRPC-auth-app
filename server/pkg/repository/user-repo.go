@@ -45,6 +45,7 @@ func (u *UserPostgres) GetByEmail(ctx context.Context, email string) (*models.Us
 	}
 	return user, nil
 }
+
 func (u *UserPostgres) Create(ctx context.Context, user *models.User) (int, error) {
 	var id int
 	query := fmt.Sprintf("insert into %s (email, password_hash) values ($1, $2) returning id", userTable)

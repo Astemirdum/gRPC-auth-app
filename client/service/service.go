@@ -5,21 +5,21 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/Astemirdum/user-app/authpb"
+	"github.com/Astemirdum/user-app/userpb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type ClientService struct {
-	cs authpb.AuthServiceClient
+	cs userpb.UserServiceClient
 }
 
-func NewClientService(cs authpb.AuthServiceClient) *ClientService {
+func NewClientService(cs userpb.UserServiceClient) *ClientService {
 	return &ClientService{cs}
 }
 
-func (c *ClientService) CreateUser(ctx context.Context, user *authpb.User) (int, error) {
-	res, err := c.cs.CreateUser(ctx, &authpb.CreateRequest{User: user})
+func (c *ClientService) CreateUser(ctx context.Context, user *userpb.User) (int, error) {
+	res, err := c.cs.CreateUser(ctx, &userpb.CreateRequest{User: user})
 	if err != nil {
 		statusErr, ok := status.FromError(err)
 		if ok {
@@ -33,13 +33,13 @@ func (c *ClientService) CreateUser(ctx context.Context, user *authpb.User) (int,
 	return int(res.Id), nil
 }
 
-func (c *ClientService) GetAllUser(ctx context.Context) ([]*authpb.User, error) {
+func (c *ClientService) GetAllUser(ctx context.Context) ([]*userpb.User, error) {
 
-	stream, err := c.cs.GetAllUser(ctx, &authpb.GetAllRequest{})
+	stream, err := c.cs.GetAllUser(ctx, &userpb.GetAllRequest{})
 	if err != nil {
 		return nil, fmt.Errorf("reading stream GetAllUser %v", err)
 	}
-	users := make([]*authpb.User, 0)
+	users := make([]*userpb.User, 0)
 	for {
 		mesg, err := stream.Recv()
 		if err == io.EOF {
@@ -53,16 +53,16 @@ func (c *ClientService) GetAllUser(ctx context.Context) ([]*authpb.User, error) 
 	return users, nil
 }
 
-func (c *ClientService) DeleteUser(ctx context.Context, id int) (bool, error) {
-	res, err := c.cs.DeleteUser(ctx, &authpb.DeleteRequest{Id: int32(id)})
+func (c *ClientService) DeleteUser(ctx context.Context, id int) error {
+	_, err := c.cs.DeleteUser(ctx, &userpb.DeleteRequest{Id: int32(id)})
 	if err != nil {
-		return false, err
+		return err
 	}
-	return res.Success, nil
+	return nil
 }
 
-func (c *ClientService) AuthUser(ctx context.Context, user *authpb.User) (string, error) {
-	res, err := c.cs.AuthUser(ctx, &authpb.AuthRequest{User: user})
+func (c *ClientService) IssueToken(ctx context.Context, user *userpb.User) (string, error) {
+	res, err := c.cs.IssueToken(ctx, &userpb.TokenRequest{User: user})
 	if err != nil {
 		return "", fmt.Errorf("error AuthUser %v", err)
 	}
@@ -70,16 +70,12 @@ func (c *ClientService) AuthUser(ctx context.Context, user *authpb.User) (string
 	return token.Token, nil
 }
 
-func (c *ClientService) ValidateToken(ctx context.Context, token string) (bool, error) {
-	res, err := c.cs.ValidateToken(ctx, &authpb.ValidateRequest{
-		Token: &authpb.Token{Token: token},
+func (c *ClientService) AuthUser(ctx context.Context, token string) error {
+	_, err := c.cs.AuthUser(ctx, &userpb.AuthRequest{
+		Token: &userpb.Token{Token: token},
 	})
 	if err != nil {
-		return false, fmt.Errorf("error ValidateToken %v", err)
+		return fmt.Errorf("error ValidateToken %v", err)
 	}
-	if !res.GetToken().Valid {
-		return false, fmt.Errorf("not valid token")
-	}
-
-	return true, nil
+	return nil
 }

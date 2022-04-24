@@ -22,14 +22,14 @@ type ConfigDB struct {
 }
 
 func NewPostgresDB(cfg *ConfigDB) (*sqlx.DB, error) {
+	if err := MigrateSchema(cfg, schema.Label); err != nil {
+		return nil, err
+	}
 	db, err := sqlx.Open("postgres", newDSN(cfg))
 	if err != nil {
 		return nil, err
 	}
 	if err = db.Ping(); err != nil {
-		return nil, err
-	}
-	if err = MigrateSchema(cfg, schema.Label); err != nil {
 		return nil, err
 	}
 	return db, nil
@@ -44,6 +44,10 @@ func MigrateSchema(cfg *ConfigDB, label string) error {
 	db, err := sql.Open("postgres", newDSN(cfg))
 	if err != nil {
 		return err
+	}
+	defer db.Close()
+	if err = db.Ping(); err != nil {
+		return fmt.Errorf("migrateSchema ping: %w", err)
 	}
 	src, err := httpfs.New(http.FS(schema.MigrationFiles), ".")
 	if err != nil {

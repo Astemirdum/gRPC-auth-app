@@ -1,18 +1,19 @@
 syntax = "proto3";
 
-package authapp;
+package userpb;
 
-// protoc auth.proto --go_out=plugins=grpc:.
+//    protoc --go_out=. --go_opt=paths=source_relative \
+//    --go-grpc_out=. --go-grpc_opt=paths=source_relative userpb/user.proto
 
-option go_package = "./;authpb";
+option go_package = "./;userpb";
 
 
-service AuthService {
+service UserService {
     rpc CreateUser(CreateRequest) returns (CreateResponse);
     rpc GetAllUser(GetAllRequest) returns (stream GetAllResponse);
     rpc DeleteUser(DeleteRequest) returns (DeleteResponse);
+    rpc IssueToken(TokenRequest) returns (TokenResponse);
     rpc AuthUser(AuthRequest) returns (AuthResponse);
-    rpc ValidateToken(ValidateRequest) returns (ValidateResponse);
 }
 
 message User {
@@ -39,27 +40,23 @@ message DeleteRequest {
     int32 id = 1;
 }
 
-message DeleteResponse{
-    bool success = 1;
-}
+message DeleteResponse{}
 
 message Token {
     string token = 1;
     bool valid = 2;
 }
 
-message AuthRequest {
+message TokenRequest {
     User user = 1;
 }
 
-message AuthResponse {
+message TokenResponse {
     Token token = 1;
 }
 
-message ValidateRequest {
+message AuthRequest {
     Token token = 1;
 }
 
-message ValidateResponse {
-    Token token = 1;    
-}
+message AuthResponse {}

@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/Astemirdum/user-app/authpb"
 	"github.com/Astemirdum/user-app/server"
 	"github.com/Astemirdum/user-app/server/models"
 	"github.com/Astemirdum/user-app/server/pkg/service"
+	"github.com/Astemirdum/user-app/userpb"
 	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
 
@@ -22,37 +22,33 @@ const (
 )
 
 type Handler struct {
+	userpb.UnimplementedUserServiceServer
+
 	s     *service.Service
 	cache *server.Cache
-	prod  *server.Producer
 }
 
-func NewHandler(srv *service.Service, cache *server.Cache, prod *server.Producer) *Handler {
+func NewHandler(srv *service.Service, cache *server.Cache) *Handler {
 	return &Handler{
 		s:     srv,
 		cache: cache,
-		prod:  prod,
 	}
 }
 
-func (h *Handler) CreateUser(ctx context.Context, req *authpb.CreateRequest) (*authpb.CreateResponse, error) {
+func (h *Handler) CreateUser(ctx context.Context, req *userpb.CreateRequest) (*userpb.CreateResponse, error) {
 	user := unmarshal(req.GetUser())
 	id, err := h.s.CreateUser(ctx, user)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "CreateUser: %v", err)
 	}
 
-	// if err := h.prod.Produce(ctx, id); err != nil {
-	// 	logrus.Printf("kafka produce: %v", err)
-	// 	return &authpb.CreateResponse{Id: int32(id)}, status.Errorf(codes.Internal, "kafka produce: %v", err)
-	// }
 	if err := h.cache.DeleteCache(ctx, cacheKey); err != nil {
 		return nil, status.Errorf(codes.Internal, "CreateUser DeleteCache: %v", err)
 	}
-	return &authpb.CreateResponse{Id: int32(id)}, nil
+	return &userpb.CreateResponse{Id: int32(id)}, nil
 }
 
-func (h *Handler) GetAllUser(_ *authpb.GetAllRequest, stream authpb.AuthService_GetAllUserServer) error {
+func (h *Handler) GetAllUser(_ *userpb.GetAllRequest, stream userpb.UserService_GetAllUserServer) error {
 	ctx := stream.Context()
 	users, err := h.cache.GetCache(ctx, cacheKey)
 	if err != nil && err != redis.Nil {
@@ -68,52 +64,44 @@ func (h *Handler) GetAllUser(_ *authpb.GetAllRequest, stream authpb.AuthService_
 			return status.Errorf(codes.Internal, "SetCache: %v", err)
 		}
 	}
-	usrs := marshalCollection(users)
+	usrs := marshalUsers(users)
 	for _, u := range usrs {
-		if err := stream.Send(&authpb.GetAllResponse{User: u}); err != nil {
+		if err := stream.Send(&userpb.GetAllResponse{User: u}); err != nil {
 			return status.Errorf(codes.Unavailable, "stream.Send: %v", err)
 		}
 	}
 	return nil
 }
 
-func (h *Handler) DeleteUser(ctx context.Context, req *authpb.DeleteRequest) (*authpb.DeleteResponse, error) {
+func (h *Handler) DeleteUser(ctx context.Context, req *userpb.DeleteRequest) (*userpb.DeleteResponse, error) {
 	if _, err := h.s.DeleteUser(ctx, int(req.GetId())); err != nil {
-		return &authpb.DeleteResponse{Success: false}, status.Errorf(codes.Internal, "DeleteUser %v", err)
+		return nil, status.Errorf(codes.Internal, "DeleteUser %v", err)
 	}
 	if err := h.cache.DeleteCache(ctx, cacheKey); err != nil {
 		return nil, status.Errorf(codes.Internal, "DeleteUser DeleteCache: %v", err)
 	}
-	return &authpb.DeleteResponse{Success: true}, nil
+	return &userpb.DeleteResponse{}, nil
 }
 
-func (h *Handler) AuthUser(ctx context.Context, req *authpb.AuthRequest) (*authpb.AuthResponse, error) {
+func (h *Handler) IssueToken(ctx context.Context, req *userpb.TokenRequest) (*userpb.TokenResponse, error) {
 	token, err := h.s.GenerateToken(ctx, unmarshal(req.GetUser()))
 	if err != nil {
-		return &authpb.AuthResponse{Token: &authpb.Token{
-			Token: "",
-			Valid: false,
-		}}, status.Errorf(codes.Internal, "AuthUser %v", err)
+		return nil, status.Errorf(codes.Internal, "AuthUser %v", err)
 	}
 
-	return &authpb.AuthResponse{Token: &authpb.Token{
+	return &userpb.TokenResponse{Token: &userpb.Token{
 		Token: token,
 		Valid: true,
 	}}, nil
 
 }
 
-func (h *Handler) ValidateToken(_ context.Context, req *authpb.ValidateRequest) (*authpb.ValidateResponse, error) {
-	token := req.GetToken().Token
+func (h *Handler) AuthUser(_ context.Context, req *userpb.AuthRequest) (*userpb.AuthResponse, error) {
+	token := req.GetToken().GetToken()
 	if _, err := h.s.ParseToken(token); err != nil {
 		return nil, status.Errorf(codes.Unavailable, "ValidateToken %v", err)
 	}
-	return &authpb.ValidateResponse{
-		Token: &authpb.Token{
-			Token: token,
-			Valid: true,
-		},
-	}, nil
+	return &userpb.AuthResponse{}, nil
 }
 
 func (h *Handler) AuthInterceptor(ctx context.Context,
@@ -122,7 +110,7 @@ func (h *Handler) AuthInterceptor(ctx context.Context,
 	handler grpc.UnaryHandler) (interface{}, error) {
 
 	start := time.Now()
-	if info.FullMethod == "/authapp.AuthService/DeleteUser" {
+	if info.FullMethod == "/userapp.AuthService/DeleteUser" {
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
 			return nil, status.Errorf(codes.InvalidArgument, "retrieving metadata failed")
@@ -154,7 +142,7 @@ func (h *Handler) AuthInterceptor(ctx context.Context,
 	return reply, err
 }
 
-func unmarshal(user *authpb.User) *models.User {
+func unmarshal(user *userpb.User) *models.User {
 	return &models.User{
 		Id:       int(user.GetId()),
 		Email:    user.GetEmail(),
@@ -162,10 +150,10 @@ func unmarshal(user *authpb.User) *models.User {
 	}
 }
 
-func marshalCollection(usrs []*models.User) []*authpb.User {
-	users := make([]*authpb.User, len(usrs))
+func marshalUsers(usrs []*models.User) []*userpb.User {
+	users := make([]*userpb.User, len(usrs))
 	for _, u := range usrs {
-		users = append(users, &authpb.User{
+		users = append(users, &userpb.User{
 			Id:       int32(u.Id),
 			Email:    u.Email,
 			Password: u.Password,
