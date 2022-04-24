@@ -56,7 +56,7 @@ func main() {
 	//grpc.Creds(credentials.NewTLS(&tls.Config{}))
 	userpb.RegisterUserServiceServer(s, srv)
 
-	lis, err := net.Listen("tcp", viper.GetString("auth-service.addr"))
+	lis, err := net.Listen("tcp", viper.GetString("user-service.addr"))
 	if err != nil {
 		logrus.Fatalf("unable to listen on %s: %v", viper.GetString("user-service.addr"), err)
 	}

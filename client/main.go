@@ -85,44 +85,43 @@ func main() {
 	ctx = metadata.NewOutgoingContext(ctx, md)
 
 	user := &userpb.User{
-		Email:    "lol13@kek.ru",
-		Password: "lol13",
+		Email:    "lol6@kek.ru",
+		Password: "lol6",
 	}
 	// create user
 	id, err := cs.CreateUser(ctx, user)
 	if err != nil {
-		logrus.Println(err)
+		logrus.Fatalf("createUser %v", err)
 	}
-	fmt.Println(id)
+	logrus.Println(id)
 
-	// // delete user
-	md = metadata.Pairs("email", "lol10@kek.ru")
+	// delete user
+	md = metadata.Pairs("email", "lol12@kek.ru") //  md for authorize del option
 	ctx = metadata.NewOutgoingContext(ctx, md)
-	if err := cs.DeleteUser(ctx, 13); err != nil {
-		logrus.Println(err)
+	if err := cs.DeleteUser(ctx, 2); err != nil {
+		logrus.Fatal(err)
 	}
-	fmt.Println("user deleted")
+	logrus.Println("user deleted")
 
-	// Auth User
-	token, err = cs.IssueToken(ctx, user)
-	if err != nil {
-		logrus.Println(err)
-	}
-	fmt.Println("token:", token)
-
-	// ////list users
+	// list users
 	users, err := cs.GetAllUser(ctx)
 	if err != nil {
-		logrus.Println(err)
+		logrus.Fatal(err)
 	}
-	fmt.Println(users)
+	logrus.Println(users)
+
+	// IssueToken
+	token, err = cs.IssueToken(ctx, user)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	logrus.Println("token:", token)
 
 	//// Validate Token
 	if err := cs.AuthUser(ctx, token); err != nil {
-		logrus.Println(err)
+		logrus.Fatal(err)
 	}
-	fmt.Println("token valid: ok")
-
+	logrus.Println("token valid: ok")
 }
 
 func initConfig() error {

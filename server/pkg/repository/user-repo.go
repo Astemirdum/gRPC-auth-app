@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	userTable = "users"
+	userTable = "userdb.users"
 )
 
 type UserPostgres struct {

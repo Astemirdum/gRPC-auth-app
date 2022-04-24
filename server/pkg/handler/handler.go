@@ -36,13 +36,12 @@ func NewHandler(srv *service.Service, cache *server.Cache) *Handler {
 }
 
 func (h *Handler) CreateUser(ctx context.Context, req *userpb.CreateRequest) (*userpb.CreateResponse, error) {
-	user := unmarshal(req.GetUser())
-	id, err := h.s.CreateUser(ctx, user)
+	id, err := h.s.CreateUser(ctx, unmarshalUser(req.GetUser()))
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "CreateUser: %v", err)
 	}
 
-	if err := h.cache.DeleteCache(ctx, cacheKey); err != nil {
+	if err = h.cache.DeleteCache(ctx, cacheKey); err != nil {
 		return nil, status.Errorf(codes.Internal, "CreateUser DeleteCache: %v", err)
 	}
 	return &userpb.CreateResponse{Id: int32(id)}, nil
@@ -84,7 +83,7 @@ func (h *Handler) DeleteUser(ctx context.Context, req *userpb.DeleteRequest) (*u
 }
 
 func (h *Handler) IssueToken(ctx context.Context, req *userpb.TokenRequest) (*userpb.TokenResponse, error) {
-	token, err := h.s.GenerateToken(ctx, unmarshal(req.GetUser()))
+	token, err := h.s.GenerateToken(ctx, unmarshalUser(req.GetUser()))
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "AuthUser %v", err)
 	}
@@ -142,7 +141,7 @@ func (h *Handler) AuthInterceptor(ctx context.Context,
 	return reply, err
 }
 
-func unmarshal(user *userpb.User) *models.User {
+func unmarshalUser(user *userpb.User) *models.User {
 	return &models.User{
 		Id:       int(user.GetId()),
 		Email:    user.GetEmail(),
@@ -151,7 +150,7 @@ func unmarshal(user *userpb.User) *models.User {
 }
 
 func marshalUsers(usrs []*models.User) []*userpb.User {
-	users := make([]*userpb.User, len(usrs))
+	users := make([]*userpb.User, 0, len(usrs))
 	for _, u := range usrs {
 		users = append(users, &userpb.User{
 			Id:       int32(u.Id),
