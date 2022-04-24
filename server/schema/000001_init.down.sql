@@ -1,1 +1,1 @@
-drop table if exists users;
+drop schema if exists userdb cascade;

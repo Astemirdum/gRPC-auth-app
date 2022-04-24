@@ -1,14 +1,14 @@
 package service
 
 import (
-	"authapp/server/entity"
-	"authapp/server/pkg/repository"
+	"context"
 	"crypto/sha1"
 	"fmt"
 	"time"
 
+	"github.com/Astemirdum/user-app/server/models"
+	"github.com/Astemirdum/user-app/server/pkg/repository"
 	"github.com/dgrijalva/jwt-go"
-	"golang.org/x/net/context"
 )
 
 type TokenService struct {
@@ -19,7 +19,7 @@ func NewAuthService(repo *repository.Repository) AuthService {
 	return &TokenService{repo}
 }
 
-func (u *Service) CreateUser(ctx context.Context, user *entity.User) (int, error) {
+func (u *Service) CreateUser(ctx context.Context, user *models.User) (int, error) {
 	user.Password = genHashPassword(user.Password)
 	return u.repo.Create(ctx, user)
 }
@@ -28,7 +28,7 @@ func (u *Service) DeleteUser(ctx context.Context, id int) (bool, error) {
 	return u.repo.Delete(ctx, id)
 }
 
-func (u *Service) GetAllUser(ctx context.Context) ([]*entity.User, error) {
+func (u *Service) GetAllUser(ctx context.Context) ([]*models.User, error) {
 	return u.repo.GetAll(ctx)
 }
 
@@ -37,7 +37,7 @@ type MyClaims struct {
 	jwt.StandardClaims
 }
 
-func (t *TokenService) GenerateToken(ctx context.Context, user *entity.User) (string, error) {
+func (t *TokenService) GenerateToken(ctx context.Context, user *models.User) (string, error) {
 	usr, err := t.Repository.GetByEmail(ctx, user.Email)
 	if err != nil {
 		return "", err

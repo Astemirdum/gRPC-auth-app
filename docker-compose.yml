@@ -1,19 +1,20 @@
 version: '3.8'
 
 services:
-  auth-app:
+  user-app:
     restart: always
     build: ./
-    command: ./server/cmd/auth-app
     depends_on:
       - db
       - cache
     ports:
       - 50051:50051
     environment:
-      - DB_PASSWORD="postgres"
+      - DB_PASSWORD=postgres
     links:
       - db
+    networks:
+      - user-networks
 
   db:
     restart: always
@@ -21,9 +22,13 @@ services:
     volumes:
         - ./.database/postgres/data:/var/lib/postgresql/data
     environment:
+      - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
     ports:
-      - 5436:5432
+      - 5432:5432
+    networks:
+      - user-networks
 
   cache:
     restart: always
@@ -31,6 +36,8 @@ services:
     command: ./redis-server
     ports:
       - 6379:6379
+    networks:
+      - user-networks
 
   zookeeper:
     image: docker.io/bitnami/zookeeper:3.7
@@ -40,6 +47,8 @@ services:
       - "zookeeper_data:/bitnami"
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - user-networks
   kafka:
     image: docker.io/bitnami/kafka:3
     ports:
@@ -51,6 +60,8 @@ services:
       - ALLOW_PLAINTEXT_LISTENER=yes
     depends_on:
       - zookeeper
+    networks:
+      - user-networks
 
 volumes:
   zookeeper_data:
@@ -58,3 +69,5 @@ volumes:
   kafka_data:
     driver: local 
   
+networks:
+  user-networks:

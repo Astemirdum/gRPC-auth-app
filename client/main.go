@@ -1,13 +1,12 @@
 package main
 
 import (
-	"authapp/authpb"
 	"context"
 	"fmt"
 	"time"
 
-	"authapp/client/service"
-
+	"github.com/Astemirdum/user-app/authpb"
+	"github.com/Astemirdum/user-app/client/service"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
@@ -49,7 +48,7 @@ func (t *tokenAuthCreds) RequireTransportSecurity() bool {
 	return false
 }
 
-func NewtokenAuthCreds(token string) *tokenAuthCreds {
+func NewTokenAuthCreds(token string) *tokenAuthCreds {
 	return &tokenAuthCreds{token}
 }
 
@@ -61,9 +60,9 @@ func main() {
 	// call cs.AuthUser(ctx, user) to get token for deletion authority
 	token := "userToken"
 
-	grpcAuth := NewtokenAuthCreds(token)
+	grpcAuth := NewTokenAuthCreds(token)
 
-	cc, err := grpc.Dial(viper.GetString("auth-service.addr"),
+	cc, err := grpc.Dial(viper.GetString("user-service.addr"),
 		grpc.WithInsecure(), /// grpc.WithTransportCredentials(creds),
 		grpc.WithPerRPCCredentials(grpcAuth),
 		grpc.WithUnaryInterceptor(timingInterceptor),

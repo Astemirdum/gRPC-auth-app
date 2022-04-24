@@ -1,13 +1,13 @@
 package handler
 
 import (
-	"authapp/authpb"
-	"authapp/server"
-	"authapp/server/entity"
-	"authapp/server/pkg/service"
 	"context"
 	"time"
 
+	"github.com/Astemirdum/user-app/authpb"
+	"github.com/Astemirdum/user-app/server"
+	"github.com/Astemirdum/user-app/server/models"
+	"github.com/Astemirdum/user-app/server/pkg/service"
 	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
 
@@ -52,7 +52,7 @@ func (h *Handler) CreateUser(ctx context.Context, req *authpb.CreateRequest) (*a
 	return &authpb.CreateResponse{Id: int32(id)}, nil
 }
 
-func (h *Handler) GetAllUser(req *authpb.GetAllRequest, stream authpb.AuthService_GetAllUserServer) error {
+func (h *Handler) GetAllUser(_ *authpb.GetAllRequest, stream authpb.AuthService_GetAllUserServer) error {
 	ctx := stream.Context()
 	users, err := h.cache.GetCache(ctx, cacheKey)
 	if err != nil && err != redis.Nil {
@@ -103,7 +103,7 @@ func (h *Handler) AuthUser(ctx context.Context, req *authpb.AuthRequest) (*authp
 
 }
 
-func (h *Handler) ValidateToken(ctx context.Context, req *authpb.ValidateRequest) (*authpb.ValidateResponse, error) {
+func (h *Handler) ValidateToken(_ context.Context, req *authpb.ValidateRequest) (*authpb.ValidateResponse, error) {
 	token := req.GetToken().Token
 	if _, err := h.s.ParseToken(token); err != nil {
 		return nil, status.Errorf(codes.Unavailable, "ValidateToken %v", err)
@@ -154,15 +154,15 @@ func (h *Handler) AuthInterceptor(ctx context.Context,
 	return reply, err
 }
 
-func unmarshal(user *authpb.User) *entity.User {
-	return &entity.User{
+func unmarshal(user *authpb.User) *models.User {
+	return &models.User{
 		Id:       int(user.GetId()),
 		Email:    user.GetEmail(),
 		Password: user.GetPassword(),
 	}
 }
 
-func marshalCollection(usrs []*entity.User) []*authpb.User {
+func marshalCollection(usrs []*models.User) []*authpb.User {
 	users := make([]*authpb.User, len(usrs))
 	for _, u := range usrs {
 		users = append(users, &authpb.User{

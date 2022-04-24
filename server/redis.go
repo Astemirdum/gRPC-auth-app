@@ -1,11 +1,11 @@
 package server
 
 import (
-	"authapp/server/entity"
 	"context"
 	"encoding/json"
 	"time"
 
+	"github.com/Astemirdum/user-app/server/models"
 	"github.com/go-redis/redis/v8"
 )
 
@@ -28,7 +28,7 @@ func NewRedisClient(addr, passwd string) (*Cache, error) {
 	return &Cache{client}, nil
 }
 
-func (c *Cache) GetCache(ctx context.Context, key string) ([]*entity.User, error) {
+func (c *Cache) GetCache(ctx context.Context, key string) ([]*models.User, error) {
 	res := c.Client.Get(ctx, key)
 	if err := res.Err(); err != nil {
 		return nil, err
@@ -37,7 +37,7 @@ func (c *Cache) GetCache(ctx context.Context, key string) ([]*entity.User, error
 	if err != nil {
 		return nil, err
 	}
-	users := make([]*entity.User, 0)
+	users := make([]*models.User, 0)
 	if err := json.Unmarshal(data, &users); err != nil {
 		return nil, err
 	}
@@ -51,8 +51,7 @@ func (c *Cache) DeleteCache(ctx context.Context, key string) error {
 	return nil
 }
 
-func (c *Cache) SetCache(ctx context.Context, key string, users []*entity.User) error {
-
+func (c *Cache) SetCache(ctx context.Context, key string, users []*models.User) error {
 	data, err := json.Marshal(users)
 	if err != nil {
 		return err

@@ -1,11 +1,11 @@
 package service
 
 import (
-	"authapp/authpb"
 	"context"
 	"fmt"
 	"io"
 
+	"github.com/Astemirdum/user-app/authpb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

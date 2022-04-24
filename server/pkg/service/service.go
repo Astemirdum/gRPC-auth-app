@@ -1,11 +1,11 @@
 package service
 
 import (
-	"authapp/server/entity"
-	"authapp/server/pkg/repository"
+	"context"
 	"time"
 
-	"golang.org/x/net/context"
+	"github.com/Astemirdum/user-app/server/models"
+	"github.com/Astemirdum/user-app/server/pkg/repository"
 )
 
 const (
@@ -21,7 +21,7 @@ type Service struct {
 
 type AuthService interface {
 	ParseToken(accessToken string) (string, error)
-	GenerateToken(ctx context.Context, user *entity.User) (string, error)
+	GenerateToken(ctx context.Context, user *models.User) (string, error)
 }
 
 func NewService(repo *repository.Repository) *Service {
