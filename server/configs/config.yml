@@ -1,5 +1,5 @@
 user-service:
-  addr: "localhost:50051"
+  addr: ":50051"
 
 db:
   host: "localhost"
@@ -10,9 +10,5 @@ db:
 redis:
   addr: "localhost:6379"
   passwd: ""
-
-kafka:
-  addr: "localhost:9092"
-  topic: "auth"
 
   

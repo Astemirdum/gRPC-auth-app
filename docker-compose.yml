@@ -10,7 +10,7 @@ services:
     ports:
       - 50051:50051
     environment:
-      - DB_PASSWORD=userdb
+      - DB_PASSWORD=postgres
     links:
       - db
     networks:
@@ -23,7 +23,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=userdb
+      - POSTGRES_DB=postgres
     ports:
       - 5432:5432
     networks:
@@ -31,7 +31,6 @@ services:
   cache:
     restart: always
     image: redis:6.2.6
-    command: ./redis-server
     ports:
       - 6379:6379
     networks:
