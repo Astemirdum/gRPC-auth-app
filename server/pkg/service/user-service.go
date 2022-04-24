@@ -50,7 +50,7 @@ func (t *TokenService) GenerateToken(ctx context.Context, user *models.User) (st
 		StandardClaims: jwt.StandardClaims{
 			IssuedAt:  time.Now().Unix(),
 			ExpiresAt: time.Now().Add(tokenTTL).Unix(),
-			Issuer:    "authapp.service.user",
+			Issuer:    "userapp.service.user",
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &claims)

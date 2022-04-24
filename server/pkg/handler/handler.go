@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/Astemirdum/user-app/server"
@@ -54,18 +55,20 @@ func (h *Handler) GetAllUser(_ *userpb.GetAllRequest, stream userpb.UserService_
 		return status.Errorf(codes.Unavailable, "GetCache: %v", err)
 	}
 	if err == redis.Nil {
-		logrus.Println("Empty cache")
+		logrus.Info("Empty cache")
 		users, err = h.s.GetAllUser(ctx)
 		if err != nil {
 			return status.Errorf(codes.Internal, "GetAllUser: %v", err)
 		}
-		if err := h.cache.SetCache(ctx, cacheKey, users); err != nil {
+		if err = h.cache.SetCache(ctx, cacheKey, users); err != nil {
 			return status.Errorf(codes.Internal, "SetCache: %v", err)
 		}
+	} else {
+		logrus.Info("get users from cache")
 	}
 	usrs := marshalUsers(users)
 	for _, u := range usrs {
-		if err := stream.Send(&userpb.GetAllResponse{User: u}); err != nil {
+		if err = stream.Send(&userpb.GetAllResponse{User: u}); err != nil {
 			return status.Errorf(codes.Unavailable, "stream.Send: %v", err)
 		}
 	}
@@ -109,16 +112,30 @@ func (h *Handler) AuthInterceptor(ctx context.Context,
 	handler grpc.UnaryHandler) (interface{}, error) {
 
 	start := time.Now()
-	if info.FullMethod == "/userapp.AuthService/DeleteUser" {
+	if info.FullMethod == "/userpb.UserService/DeleteUser" {
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
 			return nil, status.Errorf(codes.InvalidArgument, "retrieving metadata failed")
 		}
-		token, ok := md["authorization"]
+		authMD, ok := md["authorization"]
 		if !ok {
 			return nil, status.Errorf(codes.InvalidArgument, "no auth details supplied")
 		}
-		email, err := h.s.ParseToken(token[0])
+		headerToken := authMD[0]
+		if headerToken == "" {
+			return nil, status.Errorf(codes.Unauthenticated, "empty authMD")
+		}
+
+		headerTokenParts := strings.Split(headerToken, " ")
+		logrus.Infof("%v", headerTokenParts)
+		if len(headerTokenParts) != 2 || headerTokenParts[0] != "Bearer" {
+			return nil, status.Errorf(codes.Unauthenticated, "invalid token")
+		}
+		token := headerTokenParts[1]
+		if len(token) == 0 {
+			return nil, status.Errorf(codes.Unauthenticated, "empty token")
+		}
+		email, err := h.s.ParseToken(token)
 
 		if err != nil {
 			return nil, status.Errorf(codes.InvalidArgument, "token not valid %v", err)
@@ -130,7 +147,7 @@ func (h *Handler) AuthInterceptor(ctx context.Context,
 		if email != emailToValid[0] {
 			return nil, status.Errorf(codes.InvalidArgument, "email not fit token")
 		}
-		logrus.Printf("Validate Token email:%s passed: %s", emailToValid[0], token[0])
+		logrus.Printf("Validate Token email:%s passed: %s", emailToValid[0], token)
 	}
 	reply, err := handler(ctx, req)
 

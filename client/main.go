@@ -58,8 +58,7 @@ func main() {
 		logrus.Fatalf("initConfigs %s", err.Error())
 	}
 	// call cs.AuthUser(ctx, user) to get token for deletion authority
-	token := "userToken"
-
+	token := "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJFbWFpbCI6ImxvbDZAa2VrLnJ1IiwiZXhwIjoxNjUwODA5NTI0LCJpYXQiOjE2NTA4MDg2MjQsImlzcyI6InVzZXJhcHAuc2VydmljZS51c2VyIn0.DZGiSLOPWFsZKO4VlwMLI_y9ud9u7lNAQZxOz4jKHtU"
 	grpcAuth := NewTokenAuthCreds(token)
 
 	cc, err := grpc.Dial(viper.GetString("user-service.addr"),
@@ -95,15 +94,7 @@ func main() {
 	}
 	logrus.Println(id)
 
-	// delete user
-	md = metadata.Pairs("email", "lol12@kek.ru") //  md for authorize del option
-	ctx = metadata.NewOutgoingContext(ctx, md)
-	if err := cs.DeleteUser(ctx, 2); err != nil {
-		logrus.Fatal(err)
-	}
-	logrus.Println("user deleted")
-
-	// list users
+	//list users
 	users, err := cs.GetAllUser(ctx)
 	if err != nil {
 		logrus.Fatal(err)
@@ -111,11 +102,24 @@ func main() {
 	logrus.Println(users)
 
 	// IssueToken
+	user = &userpb.User{
+		Email:    "lol6@kek.ru",
+		Password: "lol6",
+	}
 	token, err = cs.IssueToken(ctx, user)
 	if err != nil {
 		logrus.Fatal(err)
 	}
 	logrus.Println("token:", token)
+
+	// delete user
+	// to del user -> IssueToken for user -> add to grpc.WithPerRPCCredentials(grpcAuth) -> add user email to md
+	md = metadata.Pairs("email", "lol6@kek.ru")
+	ctx = metadata.NewOutgoingContext(ctx, md)
+	if err := cs.DeleteUser(ctx, 10); err != nil {
+		logrus.Fatal(err)
+	}
+	logrus.Println("user deleted")
 
 	//// Validate Token
 	if err := cs.AuthUser(ctx, token); err != nil {

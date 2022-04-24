@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"net"
 	"os"
 	"os/signal"
@@ -40,8 +41,11 @@ func main() {
 	if err != nil {
 		logrus.Fatalf("db init: %v", err)
 	}
-
-	cache, err := server.NewRedisClient(viper.GetString("redis.addr"), viper.GetString("redis.passwd"))
+	ctx, cancelFn := context.WithTimeout(context.Background(), time.Second)
+	defer cancelFn()
+	cache, err := server.NewRedisClient(ctx,
+		viper.GetString("redis.addr"),
+		viper.GetString("redis.passwd"))
 	if err != nil {
 		logrus.Fatalf("redis init: %v", err)
 	}

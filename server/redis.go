@@ -17,12 +17,12 @@ type Cache struct {
 	Client *redis.Client
 }
 
-func NewRedisClient(addr, passwd string) (*Cache, error) {
+func NewRedisClient(ctx context.Context, addr, passwd string) (*Cache, error) {
 	client := redis.NewClient(
-		&redis.Options{Addr: addr,
-			Password: passwd},
-	)
-	if _, err := client.Ping(context.Background()).Result(); err != nil {
+		&redis.Options{
+			Addr:     addr,
+			Password: passwd})
+	if _, err := client.Ping(ctx).Result(); err != nil {
 		return nil, err
 	}
 	return &Cache{client}, nil
@@ -38,7 +38,7 @@ func (c *Cache) GetCache(ctx context.Context, key string) ([]*models.User, error
 		return nil, err
 	}
 	users := make([]*models.User, 0)
-	if err := json.Unmarshal(data, &users); err != nil {
+	if err = json.Unmarshal(data, &users); err != nil {
 		return nil, err
 	}
 	return users, nil
@@ -57,7 +57,7 @@ func (c *Cache) SetCache(ctx context.Context, key string, users []*models.User) 
 		return err
 	}
 	res := c.Client.Set(ctx, key, data, cacheTTL)
-	if err := res.Err(); err != nil {
+	if err = res.Err(); err != nil {
 		return err
 	}
 	return nil
