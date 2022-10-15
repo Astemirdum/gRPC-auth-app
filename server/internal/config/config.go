@@ -2,7 +2,7 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
+	"github.com/sirupsen/logrus"
 	"log"
 	"os"
 	"sync"
@@ -81,5 +81,6 @@ func ReadConfigYML(configYML string) *Config {
 
 func printConfig(cfg *Config) {
 	jscfg, _ := json.MarshalIndent(cfg, "", "	")
-	fmt.Println(string(jscfg))
+	logrus.Info(string(jscfg))
+	// fmt.Println(string(jscfg))
 }

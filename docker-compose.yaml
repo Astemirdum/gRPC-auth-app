@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   user-app:
+    container_name: user-app
     restart: always
     build: ./
     depends_on:

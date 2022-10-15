@@ -7,13 +7,15 @@
   - list users
   - authorize user
 
-- Authorization and authentication using a stateless approach (JWT)
-- The Clean Architecture approach (dependency injection)
+- The Clean Architecture
+- Authentication using a stateless approach (JWT)
 - Postgres database using <a href="https://github.com/jmoiron/sqlx">sqlx</a> library.
-- list users, the data is cached in <a href="https://redis.io/">Redis</a> for 1 min.
-- Application configuration using <a href="https://github.com/spf13/viper">spf13/viper</a> library.
+- Kafka broker using <a href="https://github.com/Shopify/sarama">sarama</a> library.
+- Clickhouse storage using <a href="https://github.com/ClickHouse/clickhouse-go">clickhouse-go</a> library.
+- list users, the data is cached in <a href="https://redis.io/">redis</a> for 1 min.
 - Graceful Shutdown.
 - Running app in Docker containers.
+- Client (grpcurl, go-client)
 
 ### to start the service:
 

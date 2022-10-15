@@ -31,7 +31,8 @@ func newDSN(cfg *config.DB) string {
 }
 
 func MigrateSchema(cfg *config.DB) error {
-	db, err := sql.Open("pgx", newDSN(cfg))
+	dsn := newDSN(cfg)
+	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		return err
 	}

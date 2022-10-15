@@ -3,25 +3,25 @@ grpc:
   port: 50051
 
 db:
-  host: "localhost"
+  host: "db"
   port: 5432
   user: "postgres"
   dbname: "postgres"
   
 redis:
-  host: "localhost"
+  host: "cache"
   port: 6379
   passwd: ""
 
 clickhouse:
-  host: "localhost"
+  host: "click"
   port: 9000
   password: ""
   username: "default"
   db: "default"
 
 kafka:
-  addr: "localhost:9095"
+  addr: "kafka:9094"
   topic: "users"
   consumer-group: "users"
   consumer-num: 1
