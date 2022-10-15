@@ -2,18 +2,15 @@ syntax = "proto3";
 
 package userpb;
 
-//    protoc --go_out=. --go_opt=paths=source_relative \
-//    --go-grpc_out=. --go-grpc_opt=paths=source_relative userpb/user.proto
-
 option go_package = "./;userpb";
 
 
 service UserService {
-    rpc CreateUser(CreateRequest) returns (CreateResponse);
-    rpc GetAllUser(GetAllRequest) returns (stream GetAllResponse);
-    rpc DeleteUser(DeleteRequest) returns (DeleteResponse);
-    rpc IssueToken(TokenRequest) returns (TokenResponse);
-    rpc AuthUser(AuthRequest) returns (AuthResponse);
+    rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+    rpc GetAllUser(GetAllUserRequest) returns (stream GetAllUserResponse);
+    rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+    rpc IssueToken(IssueTokenRequest) returns (IssueTokenResponse);
+    rpc AuthUser(AuthUserRequest) returns (AuthUserResponse);
 }
 
 message User {
@@ -22,41 +19,41 @@ message User {
     string password = 3;
 }
 
-message CreateRequest {
+message CreateUserRequest {
     User user = 1;
 }
 
-message CreateResponse {
+message CreateUserResponse {
     int32 id = 1;
 }
 
-message GetAllRequest {}
+message GetAllUserRequest {}
 
-message GetAllResponse {
+message GetAllUserResponse {
     User user = 1;
 }
 
-message DeleteRequest {
+message DeleteUserRequest {
     int32 id = 1;
 }
 
-message DeleteResponse{}
+message DeleteUserResponse{}
 
 message Token {
     string token = 1;
     bool valid = 2;
 }
 
-message TokenRequest {
+message IssueTokenRequest {
     User user = 1;
 }
 
-message TokenResponse {
+message IssueTokenResponse {
     Token token = 1;
 }
 
-message AuthRequest {
+message AuthUserRequest {
     Token token = 1;
 }
 
-message AuthResponse {}
+message AuthUserResponse {}

@@ -2,74 +2,94 @@ package main
 
 import (
 	"context"
+	"github.com/spf13/pflag"
+	"google.golang.org/grpc/reflection"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
-
-	"github.com/Astemirdum/user-app/server"
-	"github.com/Astemirdum/user-app/server/pkg/handler"
-	"github.com/Astemirdum/user-app/server/pkg/repository"
-	"github.com/Astemirdum/user-app/server/pkg/service"
+	"github.com/Astemirdum/user-app/server/internal/broker"
+	"github.com/Astemirdum/user-app/server/internal/cache"
+	"github.com/Astemirdum/user-app/server/internal/config"
+	"github.com/Astemirdum/user-app/server/internal/handler"
+	"github.com/Astemirdum/user-app/server/internal/repository"
+	"github.com/Astemirdum/user-app/server/internal/service"
+	"github.com/Astemirdum/user-app/server/internal/storage"
 	"github.com/Astemirdum/user-app/userpb"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
+	"google.golang.org/grpc"
 )
 
 func main() {
 	logrus.SetFormatter(&logrus.JSONFormatter{})
-	if err := initConfig(); err != nil {
-		logrus.Fatalf("initConfigs %v", err)
-	}
+	logrus.SetLevel(logrus.DebugLevel)
+
+	var configPath = pflag.StringP("config", "c", "config.yml", "config path")
+	pflag.Parse()
 
 	if err := godotenv.Load(); err != nil {
 		logrus.Fatalf("load envs from .env  %v", err)
 	}
 
-	db, err := server.NewPostgresDB(&server.ConfigDB{
-		Host:     viper.GetString("db.host"),
-		Port:     viper.GetInt("db.port"),
-		Username: viper.GetString("db.user"),
-		Password: os.Getenv("DB_PASSWORD"),
-		NameDB:   viper.GetString("db.dbname"),
-	})
+	cfg := config.ReadConfigYML(*configPath)
+
+	db, err := repository.NewPostgresDB(&cfg.Database)
 	if err != nil {
 		logrus.Fatalf("db init: %v", err)
 	}
+
 	ctx, cancelFn := context.WithTimeout(context.Background(), time.Second)
 	defer cancelFn()
-	cache, err := server.NewRedisClient(ctx,
-		viper.GetString("redis.addr"),
-		viper.GetString("redis.passwd"))
+	red, err := cache.NewCache(ctx,
+		net.JoinHostPort(cfg.Redis.Host, cfg.Redis.Port),
+		cfg.Redis.Password)
 	if err != nil {
 		logrus.Fatalf("redis init: %v", err)
 	}
 
+	br, err := broker.NewBroker(&cfg.Kafka)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	producer, err := broker.NewProducer(&cfg.Kafka)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	st, err := storage.NewStorage(cfg)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
 	repo := repository.NewRepository(db)
 	services := service.NewService(repo)
-	srv := handler.NewHandler(services, cache)
+	srv := handler.NewHandler(services, red, producer)
 
 	s := grpc.NewServer(
 		grpc.UnaryInterceptor(srv.AuthInterceptor),
-		grpc.StreamInterceptor(logInterceptor))
-	//grpc.Creds(credentials.NewTLS(&tls.Config{}))
+		grpc.StreamInterceptor(handler.LogInterceptor))
+	// grpc.Creds(credentials.NewTLS(&tls.Config{}))
+
 	userpb.RegisterUserServiceServer(s, srv)
 
-	lis, err := net.Listen("tcp", viper.GetString("user-service.addr"))
+	reflection.Register(s)
+
+	grpcAddr := net.JoinHostPort(cfg.Grpc.Host, cfg.Grpc.Port)
+	lis, err := net.Listen("tcp", grpcAddr)
 	if err != nil {
-		logrus.Fatalf("unable to listen on %s: %v", viper.GetString("user-service.addr"), err)
+		logrus.Fatalf("unable to listen on %s: %v",
+			grpcAddr, err)
 	}
+
 	go func() {
 		if err := s.Serve(lis); err != nil {
 			logrus.Fatalf("failed gRPC Server: %v", err)
 		}
 	}()
-	logrus.Infof("Server successfully has been started on %s", viper.GetString("user-service.addr"))
+	logrus.Infof("Server successfully has been started on %s", grpcAddr)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGTERM, os.Interrupt)
@@ -77,32 +97,10 @@ func main() {
 	logrus.Println("Graceful shutdown")
 
 	_ = db.Close()
-	_ = cache.Client.Close()
+	_ = red.Client.Close()
 	_ = lis.Close()
+	_ = st.Close()
+	_ = producer.Close()
+	_ = br.Close()
 	logrus.Println("END GAME...")
-}
-
-func initConfig() error {
-	viper.AddConfigPath("../configs")
-	viper.AddConfigPath("configs")
-	viper.SetConfigName("config")
-	return viper.ReadInConfig()
-}
-
-func logInterceptor(srv interface{},
-	ss grpc.ServerStream,
-	info *grpc.StreamServerInfo,
-	handler grpc.StreamHandler) error {
-
-	start := time.Now()
-	md, _ := metadata.FromIncomingContext(ss.Context())
-
-	err := handler(srv, ss)
-
-	logrus.Printf("request - Method:%s Duration:%s MD:%v Error:%v ",
-		info.FullMethod,
-		time.Since(start),
-		md,
-		err)
-	return err
 }

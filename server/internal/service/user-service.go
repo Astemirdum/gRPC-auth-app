@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Astemirdum/user-app/server/internal/repository"
 	"github.com/Astemirdum/user-app/server/models"
-	"github.com/Astemirdum/user-app/server/pkg/repository"
 	"github.com/dgrijalva/jwt-go"
 )
 
 type TokenService struct {
-	*repository.Repository
+	UserRepo
 }
 
 func NewAuthService(repo *repository.Repository) AuthService {
@@ -21,15 +21,15 @@ func NewAuthService(repo *repository.Repository) AuthService {
 
 func (u *Service) CreateUser(ctx context.Context, user *models.User) (int, error) {
 	user.Password = genHashPassword(user.Password)
-	return u.repo.Create(ctx, user)
+	return u.Create(ctx, user)
 }
 
 func (u *Service) DeleteUser(ctx context.Context, id int) (bool, error) {
-	return u.repo.Delete(ctx, id)
+	return u.Delete(ctx, id)
 }
 
 func (u *Service) GetAllUser(ctx context.Context) ([]*models.User, error) {
-	return u.repo.GetAll(ctx)
+	return u.GetAll(ctx)
 }
 
 type MyClaims struct {
@@ -37,8 +37,8 @@ type MyClaims struct {
 	jwt.StandardClaims
 }
 
-func (t *TokenService) GenerateToken(ctx context.Context, user *models.User) (string, error) {
-	usr, err := t.Repository.GetByEmail(ctx, user.Email)
+func (ts *TokenService) GenerateToken(ctx context.Context, user *models.User) (string, error) {
+	usr, err := ts.GetByEmail(ctx, user.Email)
 	if err != nil {
 		return "", err
 	}
@@ -58,8 +58,7 @@ func (t *TokenService) GenerateToken(ctx context.Context, user *models.User) (st
 	return token.SignedString([]byte(signKey))
 }
 
-func (t *TokenService) ParseToken(accessToken string) (string, error) {
-
+func (ts *TokenService) ParseToken(accessToken string) (string, error) {
 	token, err := jwt.ParseWithClaims(accessToken, &MyClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("wrong signing method")

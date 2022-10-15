@@ -1,5 +1,6 @@
-user-service:
-  addr: ":50051"
+grpc:
+  host: "localhost"
+  port: 50051
 
 db:
   host: "localhost"
@@ -8,7 +9,22 @@ db:
   dbname: "postgres"
   
 redis:
-  addr: "localhost:6379"
+  host: "localhost"
+  port: 6379
   passwd: ""
 
-  
+clickhouse:
+  host: "localhost"
+  port: 9000
+  password: ""
+  username: "default"
+  db: "default"
+
+kafka:
+  addr: "localhost:9095"
+  topic: "users"
+  consumer-group: "users"
+  consumer-num: 1
+  addr-click: "kafka:9092"
+  partition-num: 2
+  format: "JSONEachRow"

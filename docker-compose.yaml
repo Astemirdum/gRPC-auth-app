@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  user-app:
+    restart: always
+    build: ./
+    depends_on:
+      - db
+      - cache
+      - click
+      - kafka
+    ports:
+      - 50051:50051
+    environment:
+      - DB_PASSWORD=${DB_PASSWORD}
+    networks:
+      - user-networks
+
+  db:
+    restart: always
+    image: postgres:latest
+    container_name: db
+    volumes:
+        - ./.database/postgres/data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=postgres
+    ports:
+      - 5432:5432
+    networks:
+      - user-networks
+
+  cache:
+    restart: always
+    image: redis:6.2.6
+    container_name: cache
+    ports:
+      - 6379:6379
+    networks:
+      - user-networks
+
+  click:
+    restart: always
+    image: clickhouse/clickhouse-server:22.6
+    container_name: click
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+      - "9009:9009"
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 262144
+        hard: 262144
+    networks:
+      - user-networks
+
+  zookeeper:
+    container_name: zookeeper
+    image: zookeeper
+    restart: always
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    networks:
+      - user-networks
+
+  kafka:
+    container_name: kafka
+    image: wurstmeister/kafka
+    restart: always
+    depends_on:
+      - zookeeper
+    ports:
+      - "9095:9094"
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_LISTENERS: INTERNAL://kafka:9092,OUTSIDE://kafka:9094
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,OUTSIDE://localhost:9095
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,OUTSIDE:PLAINTEXT
+
+      KAFKA_LOG_DIRS: /kafka/logs
+      KAFKA_BROKER_ID: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./kafka_data:/kafka
+    networks:
+      - user-networks
+
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+      - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
+    networks:
+      - user-networks
+
+
+networks:
+  user-networks:
+    driver: bridge
+

@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/Astemirdum/user-app/server/internal/repository"
 	"github.com/Astemirdum/user-app/server/models"
-	"github.com/Astemirdum/user-app/server/pkg/repository"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 )
 
 type Service struct {
-	repo *repository.Repository
+	UserRepo
 	AuthService
 }
 
@@ -24,9 +24,16 @@ type AuthService interface {
 	GenerateToken(ctx context.Context, user *models.User) (string, error)
 }
 
+type UserRepo interface {
+	GetAll(ctx context.Context) ([]*models.User, error)
+	Delete(ctx context.Context, id int) (bool, error)
+	GetByEmail(ctx context.Context, email string) (*models.User, error)
+	Create(ctx context.Context, user *models.User) (int, error)
+}
+
 func NewService(repo *repository.Repository) *Service {
 	return &Service{
-		repo:        repo,
+		UserRepo:    repo,
 		AuthService: NewAuthService(repo),
 	}
 }

@@ -1,4 +1,4 @@
-package server
+package cache
 
 import (
 	"context"
@@ -17,11 +17,12 @@ type Cache struct {
 	Client *redis.Client
 }
 
-func NewRedisClient(ctx context.Context, addr, passwd string) (*Cache, error) {
+func NewCache(ctx context.Context, addr, passwd string) (*Cache, error) {
 	client := redis.NewClient(
 		&redis.Options{
 			Addr:     addr,
-			Password: passwd})
+			Password: passwd,
+		})
 	if _, err := client.Ping(ctx).Result(); err != nil {
 		return nil, err
 	}

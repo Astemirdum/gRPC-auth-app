@@ -19,7 +19,7 @@ func NewClientService(cs userpb.UserServiceClient) *ClientService {
 }
 
 func (c *ClientService) CreateUser(ctx context.Context, user *userpb.User) (int, error) {
-	res, err := c.cs.CreateUser(ctx, &userpb.CreateRequest{User: user})
+	res, err := c.cs.CreateUser(ctx, &userpb.CreateUserRequest{User: user})
 	if err != nil {
 		statusErr, ok := status.FromError(err)
 		if ok {
@@ -34,8 +34,7 @@ func (c *ClientService) CreateUser(ctx context.Context, user *userpb.User) (int,
 }
 
 func (c *ClientService) GetAllUser(ctx context.Context) ([]*userpb.User, error) {
-
-	stream, err := c.cs.GetAllUser(ctx, &userpb.GetAllRequest{})
+	stream, err := c.cs.GetAllUser(ctx, &userpb.GetAllUserRequest{})
 	if err != nil {
 		return nil, fmt.Errorf("reading stream GetAllUser %v", err)
 	}
@@ -54,7 +53,7 @@ func (c *ClientService) GetAllUser(ctx context.Context) ([]*userpb.User, error) 
 }
 
 func (c *ClientService) DeleteUser(ctx context.Context, id int) error {
-	_, err := c.cs.DeleteUser(ctx, &userpb.DeleteRequest{Id: int32(id)})
+	_, err := c.cs.DeleteUser(ctx, &userpb.DeleteUserRequest{Id: int32(id)})
 	if err != nil {
 		return err
 	}
@@ -62,7 +61,7 @@ func (c *ClientService) DeleteUser(ctx context.Context, id int) error {
 }
 
 func (c *ClientService) IssueToken(ctx context.Context, user *userpb.User) (string, error) {
-	res, err := c.cs.IssueToken(ctx, &userpb.TokenRequest{User: user})
+	res, err := c.cs.IssueToken(ctx, &userpb.IssueTokenRequest{User: user})
 	if err != nil {
 		return "", fmt.Errorf("error AuthUser %v", err)
 	}
@@ -71,7 +70,7 @@ func (c *ClientService) IssueToken(ctx context.Context, user *userpb.User) (stri
 }
 
 func (c *ClientService) AuthUser(ctx context.Context, token string) error {
-	_, err := c.cs.AuthUser(ctx, &userpb.AuthRequest{
+	_, err := c.cs.AuthUser(ctx, &userpb.AuthUserRequest{
 		Token: &userpb.Token{Token: token},
 	})
 	if err != nil {

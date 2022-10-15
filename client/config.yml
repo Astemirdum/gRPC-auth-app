@@ -1,0 +1,2 @@
+service:
+  addr: "localhost:50051"
