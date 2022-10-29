@@ -3,10 +3,11 @@ package storage
 import (
 	"context"
 	"fmt"
-	"github.com/Astemirdum/user-app/server/internal/config"
-	"github.com/ClickHouse/clickhouse-go/v2"
 	"net"
 	"time"
+
+	"github.com/Astemirdum/user-app/server/internal/config"
+	"github.com/ClickHouse/clickhouse-go/v2"
 )
 
 type Storage struct {
@@ -76,6 +77,7 @@ func (st *Storage) createKafkaEngine(ctx context.Context, cfg config.Kafka) erro
 
 	return st.db.Exec(ctx, kafkaEngine)
 }
+
 func (st *Storage) createMV(ctx context.Context) error {
 	mv := `CREATE MATERIALIZED VIEW  IF NOT EXISTS user_logs_view
             ENGINE = MergeTree

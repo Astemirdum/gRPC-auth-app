@@ -1,10 +1,11 @@
 package broker
 
 import (
+	"time"
+
 	"github.com/Astemirdum/user-app/server/internal/config"
 	"github.com/Shopify/sarama"
 	"github.com/sirupsen/logrus"
-	"time"
 )
 
 type Broker struct {
@@ -24,7 +25,6 @@ func NewBroker(kcfg *config.Kafka) (*Broker, error) {
 }
 
 func (b *Broker) createTopic(kcfg *config.Kafka) error {
-
 	topicDetail := &sarama.TopicDetail{}
 	topicDetail.NumPartitions = int32(kcfg.PartitionNum)
 	topicDetail.ReplicationFactor = 1

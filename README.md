@@ -1,4 +1,4 @@
-# gRPC Service AuthUsersApp на Go
+# gRPC Service AuthUsersApp
 
 ## The following concepts are applied in app:
 - Development of a gRPC service based on a proto file in Go:
@@ -23,3 +23,5 @@
 ```
 make run
 ```
+
+![](user-app.png)

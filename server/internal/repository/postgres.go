@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/Astemirdum/user-app/server/internal/config"
 	"github.com/Astemirdum/user-app/server/migrations"
 	_ "github.com/jackc/pgx/v4/stdlib"

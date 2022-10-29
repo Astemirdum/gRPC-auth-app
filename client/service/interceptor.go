@@ -3,8 +3,9 @@ package service
 import (
 	"context"
 	"fmt"
-	"google.golang.org/grpc"
 	"time"
+
+	"google.golang.org/grpc"
 )
 
 func TimingInterceptor(

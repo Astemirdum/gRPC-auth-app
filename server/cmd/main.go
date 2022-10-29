@@ -2,13 +2,14 @@ package main
 
 import (
 	"context"
-	"github.com/spf13/pflag"
-	"google.golang.org/grpc/reflection"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/spf13/pflag"
+	"google.golang.org/grpc/reflection"
 
 	"github.com/Astemirdum/user-app/server/internal/broker"
 	"github.com/Astemirdum/user-app/server/internal/cache"
@@ -27,7 +28,7 @@ func main() {
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 	logrus.SetLevel(logrus.DebugLevel)
 
-	var configPath = pflag.StringP("config", "c", "config.yml", "config path")
+	configPath := pflag.StringP("config", "c", "config.yml", "config path")
 	pflag.Parse()
 
 	if err := godotenv.Load(); err != nil {

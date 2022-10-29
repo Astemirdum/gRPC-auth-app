@@ -2,13 +2,14 @@ package handler
 
 import (
 	"context"
+	"strings"
+	"time"
+
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"strings"
-	"time"
 )
 
 const deleteMethod = "/userpb.UserService/DeleteUser"

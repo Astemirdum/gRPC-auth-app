@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
+	"time"
+
 	"github.com/Astemirdum/user-app/client"
 	"google.golang.org/grpc/credentials/insecure"
-	"time"
 
 	"github.com/Astemirdum/user-app/client/service"
 	"github.com/Astemirdum/user-app/userpb"
@@ -17,7 +18,7 @@ func main() {
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 	// call cs.AuthUser(ctx, user) to get token for deletion authority
 
-	//TODO: issue token for user delete
+	// TODO: issue token for user delete
 	token := "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJFbWFpbCI6ImxvbDhAa2VrLnJ1IiwiZXhwIjoxNjY1ODMzNjY4LCJpYXQiOjE2NjU4MzI3NjgsImlzcyI6InVzZXJhcHAuc2VydmljZS51c2VyIn0.WKjyn0_hCi3rloeX_S9iWfRHWmGtQZiI-Fw05G4hUh8"
 	grpcAuth := service.NewTokenAuthCreds(token)
 
@@ -86,5 +87,4 @@ func main() {
 		logrus.Fatal(err)
 	}
 	logrus.Println("token valid: ok")
-
 }

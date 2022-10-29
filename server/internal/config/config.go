@@ -2,10 +2,11 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/sirupsen/logrus"
 	"log"
 	"os"
 	"sync"
+
+	"github.com/sirupsen/logrus"
 
 	"gopkg.in/yaml.v3"
 )

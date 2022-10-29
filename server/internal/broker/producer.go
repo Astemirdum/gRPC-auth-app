@@ -2,11 +2,12 @@ package broker
 
 import (
 	"encoding/json"
+	"time"
+
 	"github.com/Astemirdum/user-app/server/internal/config"
 	"github.com/Astemirdum/user-app/server/models"
 	"github.com/Shopify/sarama"
 	"github.com/sirupsen/logrus"
-	"time"
 )
 
 type Producer struct {

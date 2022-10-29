@@ -5,7 +5,7 @@ GRPC_METHOD="userpb.UserService/CreateUser"
 
 
 d=13
-for (( i=0; i <= 5; i++ ))
+for (( i=0; i < 5; i++ ))
 do
 
 payload=$(

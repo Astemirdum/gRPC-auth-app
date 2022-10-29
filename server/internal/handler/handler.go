@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+
 	"github.com/Astemirdum/user-app/server/internal/broker"
 	"github.com/Astemirdum/user-app/server/internal/cache"
 	"github.com/Astemirdum/user-app/server/internal/service"
